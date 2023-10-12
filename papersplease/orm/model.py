@@ -6,13 +6,16 @@ from sqlmodel import SQLModel, Field
 from sqlalchemy import PrimaryKeyConstraint
 
 
-class Account(SQLModel, table=True):
+class AccountDTO(SQLModel):
     email: str = Field(primary_key=True)
-    password: str
     first_name: str
     last_name: str
     title: str
     affiliation: str
+
+
+class Account(AccountDTO, table=True):
+    password: str
 
 
 class Conference(SQLModel, table=True):
