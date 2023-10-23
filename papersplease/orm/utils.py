@@ -1,15 +1,19 @@
-from enum import Flag, auto
+from typing import NamedTuple
 
 from sqlmodel import Session, select
 
 from .connect import engine
-from .model import Account, Conference, PaperAuthor
+from .model import Account, Conference, PaperAuthor, Assignment
 
 
 def user_is_chair_of_any(email: str) -> bool:
     """Checks if user is a chair of any conference"""
     with Session(engine) as sess:
-        res = sess.exec(select(Account).where(Account.email == email).join(Conference.chair == Account.email))
+        res = sess.exec(
+            select(Account)
+            .where(Account.email == email)
+            .join(Conference, Conference.chair == Account.email)
+        )
 
         return bool(res.first())
 
@@ -17,7 +21,11 @@ def user_is_chair_of_any(email: str) -> bool:
 def user_is_author(email: str) -> bool:
     """Checks if user is an author"""
     with Session(engine) as sess:
-        res = sess.exec(select(Account).where(Account.email == email).join(PaperAuthor.author_email == Account.email))
+        res = sess.exec(
+            select(Account)
+            .where(Account.email == email)
+            .join(PaperAuthor, PaperAuthor.author_email == Account.email)
+        )
 
         return bool(res.first())
 
@@ -25,18 +33,25 @@ def user_is_author(email: str) -> bool:
 def user_is_reviewer(email: str) -> bool:
     """Checks if user is a reviewer"""
     with Session(engine) as sess:
-        res = sess.exec(select(Account).where(Account.email == email).join(PaperAuthor.author_email == Account.email))
+        res = sess.exec(
+            select(Account)
+            .where(Account.email == email)
+            .join(Assignment, Assignment.reviewer_email == Account.email)
+        )
 
         return bool(res.first())
 
 
-class Role(Flag):
-    author = auto()
-    reviewer = auto()
-    chair = auto()
+class Roles(NamedTuple):
+    author: bool
+    chair: bool
+    reviewer: bool
 
 
-def user_roles(email: str) -> Role:
+def user_roles(email: str) -> Roles:
     """Gets all roles a user is a part of, globally. For use in UI, not per conference."""
-    return (user_is_author(email) and Role.author) | (user_is_reviewer(email) and Role.reviewer) | (
-                user_is_chair_of_any(email) and Role.chair)
+    return Roles(
+        author=user_is_author(email),
+        chair=user_is_chair_of_any(email),
+        reviewer=user_is_reviewer(email),
+    )

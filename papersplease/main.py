@@ -9,11 +9,16 @@ from starlette import status
 from starlette.responses import RedirectResponse
 
 from .orm.connect import prepare_db
-from .deps import db_session, get_current_user, ensure_user_not_logged_in
+from .deps import (
+    db_session,
+    get_current_user,
+    ensure_user_not_logged_in,
+    get_user_roles,
+)
 from .orm.model import Account, AccountDTO
+from .orm.utils import Roles
 from .security import password
 from .security.token import Token, create_access_token
-import orm.utils
 
 app = FastAPI()
 
@@ -27,12 +32,11 @@ def on_startup():
 
 
 @app.get("/")
-async def root(
-    request: Request, user: Annotated[AccountDTO, Depends(get_current_user)]
-):
+async def root(request: Request, roles: Annotated[Roles, Depends(get_user_roles)]):
     """Home landing page for signed in users"""
+
     return templates.TemplateResponse(
-        "home.html.jinja", {"request": request, "uname": user.first_name}
+        "home.html.jinja", {"request": request, "roles": roles}
     )
 
 

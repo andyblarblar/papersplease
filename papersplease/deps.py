@@ -9,6 +9,7 @@ from starlette.requests import Request
 from .orm.connect import engine
 from .orm.model import Account, AccountDTO
 from .security.token import decode, OAuth2PasswordBearerWithCookie
+from .orm import utils
 
 
 def db_session() -> Session:
@@ -41,6 +42,13 @@ async def get_current_user(
             headers={"WWW-Authenticate": "Bearer", "Location": "/logout"},
         )
     return AccountDTO.from_orm(db.get(Account, data.email))
+
+
+async def get_user_roles(
+    user: Annotated[AccountDTO, Depends(get_current_user)]
+) -> utils.Roles:
+    """Gets all roles the logged-in user participates in."""
+    return utils.user_roles(user.email)
 
 
 async def ensure_user_not_logged_in(request: Request):
