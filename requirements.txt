@@ -4,3 +4,4 @@ python-jose
 passlib
 sqlmodel
 uvicorn
+jinja2

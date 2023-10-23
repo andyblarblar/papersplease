@@ -7,7 +7,7 @@ from .model import Account, Conference, Assignment, Paper, PaperAuthor
 sqlite_file_name = "db.sqlite"
 sqlite_url = f"sqlite:///{sqlite_file_name}"
 
-engine = create_engine(sqlite_url, echo=True)
+engine = create_engine(sqlite_url)
 
 
 def prepare_db():
