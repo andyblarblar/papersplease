@@ -1,0 +1,35 @@
+#header {
+    width: 100%;
+}
+
+/* Top navbar */
+#nav-boxes {
+    width: 30%;
+}
+
+#assign-box {
+    background-color: #F6E96F;
+    text-decoration: none;
+    color: #000000;
+    text-align: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#conf-box {
+    background-color: #60DA55;
+    text-decoration: none;
+    color: #000000;
+    text-align: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
+
+#paper-box {
+    background-color: #F66F6F;
+    text-decoration: none;
+    color: #000000;
+    text-align: center;
+    padding-top: 10px;
+    padding-bottom: 10px;
+}
