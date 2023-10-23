@@ -27,7 +27,11 @@ async def get_current_user(
     token: Annotated[str, Depends(oauth2_scheme)],
     db: Annotated[Session, Depends(db_session)],
 ) -> AccountDTO:
-    """Authenticates the current user, and gets their account"""
+    """
+    Authenticates the current user, and gets their account.
+    If the user has no access token, they are sent to the logon page.
+    If the user has an invalid token, they are logged out, then sent to the logon page.
+    """
     data = decode(token)
     if not data:
         # If token bad, force user to destroy cookie to simplify

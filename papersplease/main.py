@@ -13,6 +13,7 @@ from .deps import db_session, get_current_user, ensure_user_not_logged_in
 from .orm.model import Account, AccountDTO
 from .security import password
 from .security.token import Token, create_access_token
+import orm.utils
 
 app = FastAPI()
 
@@ -37,7 +38,7 @@ async def root(
 
 @app.get("/login")
 async def login(request: Request, not_login=Depends(ensure_user_not_logged_in)):
-    """Login page"""
+    """Login page. Will redirect to home if already logged in."""
     return templates.TemplateResponse("login.html.jinja", {"request": request})
 
 
