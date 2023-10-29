@@ -15,6 +15,7 @@ from .deps import (
     ensure_user_not_logged_in,
     get_user_roles,
     get_user_owned_paper,
+    get_avil_conferences,
 )
 from .orm.model import (
     Account,
@@ -101,6 +102,24 @@ async def author_paperview(
             "decision": decision_text,
             "paper": selected_paper,
             "authors": authors,
+        },
+    )
+
+
+@app.get("/author/papersub1")
+async def author_sub_1(
+    request: Request,
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    conferences: Annotated[list[Conference], Depends(get_avil_conferences)],
+):
+    """Author paper submission first step"""
+
+    return templates.TemplateResponse(
+        "author_papersub1.html.jinja",
+        {
+            "request": request,
+            "roles": roles,
+            "conferences": conferences,
         },
     )
 

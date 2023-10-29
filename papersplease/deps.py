@@ -1,3 +1,4 @@
+import datetime
 import logging
 from typing import Annotated
 
@@ -7,7 +8,7 @@ from starlette import status
 from starlette.requests import Request
 
 from .orm.connect import engine
-from .orm.model import Account, AccountDTO, Paper, PaperAuthor
+from .orm.model import Account, AccountDTO, Paper, PaperAuthor, Conference
 from .security.token import decode, OAuth2PasswordBearerWithCookie
 from .orm import utils
 
@@ -82,3 +83,14 @@ async def get_user_owned_paper(
         return res
     else:
         raise HTTPException(401, "This user does not have access to this paper")
+
+
+async def get_avil_conferences(
+    sess: Annotated[Session, Depends(db_session)],
+) -> list[Conference]:
+    """Returns all conferences that can be submitted too"""
+    res = sess.exec(
+        select(Conference).where(Conference.paper_deadline > datetime.datetime.utcnow())
+    ).all()
+
+    return res

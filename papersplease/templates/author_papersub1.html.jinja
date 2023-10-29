@@ -1,0 +1,36 @@
+{% extends "common.html.jinja" %}
+
+{% block body %}
+    <p>
+        Please select a conference to submit to:
+    </p>
+
+    <!-- Conf table -->
+    <table class="pure-table" id="paper-table">
+        <thead>
+        <tr>
+            <th>Conference name</th>
+            <th>Location</th>
+            <th>Start Date</th>
+            <th>End Date</th>
+            <th>Submission Due</th>
+            <th>Select</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for conference in conferences %}
+            <tr>
+                <td>{{ conference.name }}</td>
+                <td>{{ ", ".join([conference.city, conference.state, conference.country]) }}</td>
+                <td>{{ conference.start_date }}</td>
+                <td>{{ conference.end_date }}</td>
+                <td>{{ conference.paper_deadline }}</td>
+                <td><a class="pure-button pure-button-primary"
+                       href="/author/papersub2?conf_id={{ conference.id }}">Select</a></td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+{% endblock %}
