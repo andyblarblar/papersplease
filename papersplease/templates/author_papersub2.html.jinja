@@ -1,0 +1,52 @@
+{% extends "common.html.jinja" %}
+
+{% block body %}
+    <!-- TODO style -->
+    <div id="papersub-info-container">
+        <form action="/author/paper" method="post" class="pure-form pure-form-stacked" id="paper-info-form">
+            <fieldset>
+                <!-- Smuggle selected conference through -->
+                <input type="hidden" name="conf_id" value="{{ conf_id }}">
+
+                <legend>Paper Info</legend>
+                <label for="paper_title">Paper title:</label>
+                <input type="text" name="paper_title" required>
+                <label for="authors">Authors (comma seperated emails):</label>
+                <input type="text" name="authors" value="{{ author }}," required>
+                <label for="file">File upload:</label>
+                <input type="file" name="file" readonly>
+                <input type="submit" name="submit">
+            </fieldset>
+        </form>
+    </div>
+
+
+    <script>
+        const form = document.getElementById("paper-info-form")
+        form.addEventListener("submit", submitForm)
+
+        // Manual form submission
+        function submitForm(e) {
+            e.preventDefault()
+
+            fetch(form.action,
+                {
+                    method: "post",
+                    body: new FormData(form)
+                }
+            ).then(
+                r => {
+                    if (!r.ok) {
+                        r.text().then(t => alert(`Creation failed: ${t}`))
+
+                        throw r.status
+                    }
+                    return r.json()
+                }
+            ).then(j => {
+                // Redirect to created paper
+                window.location = "/author/paper?paper_id=" + j["id"]
+            })
+        }
+    </script>
+{% endblock %}

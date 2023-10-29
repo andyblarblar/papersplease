@@ -76,7 +76,8 @@ async def get_user_owned_paper(
     res = sess.exec(
         select(Paper)
         .join(PaperAuthor, PaperAuthor.paper_id == Paper.id)
-        .where(PaperAuthor.author_email == account.email and Paper.id == paper_id)
+        .where(PaperAuthor.author_email == account.email)
+        .where(Paper.id == paper_id)
     ).first()
 
     if res:

@@ -1,9 +1,11 @@
+import datetime
 from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, Response, Request, Query
+from fastapi import FastAPI, Depends, HTTPException, Response, Request, Query, Form
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
 from sqlmodel import SQLModel, Session, select
 from starlette import status
 from starlette.responses import RedirectResponse
@@ -122,6 +124,70 @@ async def author_sub_1(
             "conferences": conferences,
         },
     )
+
+
+@app.get("/author/papersub2")
+async def author_sub_2(
+    request: Request,
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+    conf_id: int,
+):
+    """Author paper submission second step"""
+
+    return templates.TemplateResponse(
+        "author_papersub2.html.jinja",
+        {
+            "request": request,
+            "roles": roles,
+            "conf_id": conf_id,
+            "author": account.email,
+        },
+    )
+
+
+@app.post("/author/paper", response_model=Paper, status_code=201)
+async def paper_create(
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+    sess: Annotated[Session, Depends(db_session)],
+    paper_title: Annotated[str, Form()],
+    authors: Annotated[str, Form()],
+    conf_id: Annotated[int, Form()],
+):
+    """Creates a new paper"""
+
+    authors = authors.split(",")
+    conf_id = conf_id
+
+    # Validate authors
+    for author in authors:
+        if not sess.get(Account, author):
+            raise HTTPException(400, f"Email: {author} does not exist!")
+
+    # Check deadline and ownership
+    if sess.get(Conference, conf_id).paper_deadline < datetime.datetime.utcnow().date():
+        raise HTTPException(400, "Conference submission deadline passed!")
+    elif sess.exec(
+        select(Account)
+        .join(Conference, Conference == conf_id)
+        .where(Account.email == Conference.chair)
+    ).first():
+        raise HTTPException(400, "Chairs cannot submit to their own conferences!")
+
+    # Add paper
+    paper_rec = Paper(conference_id=conf_id, title=paper_title)
+    sess.add(paper_rec)
+    sess.commit()
+
+    # Then add authors
+    author_recs = [
+        PaperAuthor(author_email=email.strip(), paper_id=paper_rec.id)
+        for email in authors
+    ]
+    sess.add_all(author_recs)
+    sess.commit()
+
+    return paper_rec
 
 
 @app.get("/login")
