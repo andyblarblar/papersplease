@@ -1,12 +1,23 @@
-<form action="/token" method="post" id="login-form">
-    <label for="username">username:
-        <input type="email" name="username" required>
-    </label>
-    <label for="password">password:
-        <input type="password" name="password" required>
-    </label>
-    <input type="submit" name="submit">
-</form>
+<header>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/purecss@3.0.0/build/pure-min.css"
+          integrity="sha384-X38yfunGUhNzHpBaEBsWLO+A0HDYOQi8ufWDkZ0k9e0eXz/tH3II7uKZ9msv++Ls" crossorigin="anonymous">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="static/styles.css">
+</header>
+
+<div id="login-form-container">
+    <form action="/token" method="post" id="login-form" class="pure-form pure-form-stacked">
+        <fieldset>
+            <legend>Login</legend>
+            <label for="username">username:</label>
+            <input type="email" name="username" required>
+            <label for="password">password:</label>
+            <input type="password" name="password" required>
+            <input type="submit" name="submit">
+        </fieldset>
+    </form>
+</div>
+
 
 <script>
     const form = document.getElementById("login-form")
@@ -25,7 +36,7 @@
             r => {
                 // Redirect if now logged in
                 if (!r.ok) {
-                    alert("Invalid Password!")
+                    alert("Invalid username or password")
                 } else {
                     window.location = "/"
                 }
