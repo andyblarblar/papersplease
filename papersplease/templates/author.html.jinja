@@ -16,7 +16,7 @@
 
         {% for paper in papers %}
             <tr>
-                <td><a href="/author/paper?id={{ paper.id }}" class="paper-link">{{ paper.title }}</a></td>
+                <td><a href="/author/paper?paper_id={{ paper.id }}" class="paper-link">{{ paper.title }}</a></td>
             </tr>
         {% endfor %}
 

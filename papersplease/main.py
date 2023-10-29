@@ -14,8 +14,17 @@ from .deps import (
     get_current_user,
     ensure_user_not_logged_in,
     get_user_roles,
+    get_user_owned_paper,
 )
-from .orm.model import Account, AccountDTO, Paper, PaperAuthor
+from .orm.model import (
+    Account,
+    AccountDTO,
+    Paper,
+    PaperAuthor,
+    Assignment,
+    Conference,
+    Decision,
+)
 from .orm.utils import Roles
 from .security import password
 from .security.token import Token, create_access_token
@@ -41,7 +50,7 @@ async def root(request: Request, roles: Annotated[Roles, Depends(get_user_roles)
 
 
 @app.get("/author")
-async def root(
+async def author_page(
     request: Request,
     roles: Annotated[Roles, Depends(get_user_roles)],
     account: Annotated[AccountDTO, Depends(get_current_user)],
@@ -62,16 +71,38 @@ async def root(
 
 
 @app.get("/author/paper")
-async def root(
+async def author_paperview(
     request: Request,
     roles: Annotated[Roles, Depends(get_user_roles)],
-    account: Annotated[AccountDTO, Depends(get_current_user)],
     sess: Annotated[Session, Depends(db_session)],
-    paper_id: Annotated[int, Query()],
+    selected_paper: Annotated[Paper, Depends(get_user_owned_paper)],
 ):
     """Author paper view"""
-    # TODO
-    pass
+
+    # Get metadata
+    conf = sess.get(Conference, selected_paper.conference_id)
+    dec = sess.get(Decision, selected_paper.id)
+    authors = ",".join(
+        sess.exec(
+            select(PaperAuthor.author_email).where(
+                PaperAuthor.paper_id == selected_paper.id
+            )
+        ).all()
+    )
+
+    decision_text = dec.status.value if dec else "Pending"
+
+    return templates.TemplateResponse(
+        "author_paperview.html.jinja",
+        {
+            "request": request,
+            "roles": roles,
+            "conference": conf,
+            "decision": decision_text,
+            "paper": selected_paper,
+            "authors": authors,
+        },
+    )
 
 
 @app.get("/login")

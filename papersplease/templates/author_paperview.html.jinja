@@ -1,0 +1,17 @@
+{% extends "common.html.jinja" %}
+
+<!-- TODO style -->
+{% block body %}
+    <h1>
+        {{ paper.title }}
+    </h1>
+    <h4>
+        Authors: {{ authors }}
+    </h4>
+    <h3>
+        Submitted to: {{ conference.name }}
+    </h3>
+    <h3>
+        Paper status: {{ decision }}
+    </h3>
+{% endblock %}

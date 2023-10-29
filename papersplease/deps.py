@@ -2,12 +2,12 @@ import logging
 from typing import Annotated
 
 from fastapi import Depends, HTTPException
-from sqlmodel import Session
+from sqlmodel import Session, select
 from starlette import status
 from starlette.requests import Request
 
 from .orm.connect import engine
-from .orm.model import Account, AccountDTO
+from .orm.model import Account, AccountDTO, Paper, PaperAuthor
 from .security.token import decode, OAuth2PasswordBearerWithCookie
 from .orm import utils
 
@@ -63,3 +63,22 @@ async def ensure_user_not_logged_in(request: Request):
         data = decode(token.removeprefix("bearer "))
         if data:
             raise redirect
+
+
+async def get_user_owned_paper(
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+    sess: Annotated[Session, Depends(db_session)],
+    paper_id: int,
+) -> Paper:
+    """Gets a paper owned by the user. 401s if user does not own, or it does not exist."""
+    # Selects a paper with the selected author and paper ids
+    res = sess.exec(
+        select(Paper)
+        .join(PaperAuthor, PaperAuthor.paper_id == Paper.id)
+        .where(PaperAuthor.author_email == account.email and Paper.id == paper_id)
+    ).first()
+
+    if res:
+        return res
+    else:
+        raise HTTPException(401, "This user does not have access to this paper")
