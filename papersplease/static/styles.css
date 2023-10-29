@@ -1,10 +1,15 @@
+/* Top navbar */
 #header {
     width: 100%;
+    display: inline-flex;
 }
 
-/* Top navbar */
 #nav-boxes {
-    width: 30%;
+    inline-size: 30%;
+    justify-content: flex-start;
+    display: inline-flex;
+    /* Causes boxes to stick to each side*/
+    flex: 1;
 }
 
 #assign-box {
@@ -32,4 +37,15 @@
     text-align: center;
     padding-top: 10px;
     padding-bottom: 10px;
+}
+
+#logout {
+    inline-size: 69%;
+    display: inline-flex;
+    justify-content: end;
+}
+
+#logout-icon-holder {
+    padding: 10px;
+    background-color: crimson;
 }

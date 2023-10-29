@@ -1,4 +1,4 @@
-<form action="/token" method="post">
+<form action="/token" method="post" id="login-form">
     <label for="username">username:
         <input type="email" name="username" required>
     </label>
@@ -7,3 +7,29 @@
     </label>
     <input type="submit" name="submit">
 </form>
+
+<script>
+    const form = document.getElementById("login-form")
+    form.addEventListener("submit", submitForm)
+
+    // Manual form submission
+    function submitForm(e) {
+        e.preventDefault()
+
+        fetch(form.action,
+            {
+                method: "post",
+                body: new FormData(form)
+            }
+        ).then(
+            r => {
+                // Redirect if now logged in
+                if (!r.ok) {
+                    alert("Invalid Password!")
+                } else {
+                    window.location = "/"
+                }
+            }
+        )
+    }
+</script>
