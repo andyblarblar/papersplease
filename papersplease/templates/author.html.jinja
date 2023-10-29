@@ -1,0 +1,25 @@
+{% extends "common.html.jinja" %}
+
+{% block body %}
+    <div id="submit-btn-container">
+        <a class="pure-button pure-button-primary" id="paper-sub-btn" href="#">Submit a Paper</a>
+    </div>
+
+    <!-- Paper table -->
+    <table class="pure-table pure-table-horizontal" id="paper-table">
+        <thead>
+        <tr>
+            <th>Paper name</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for paper in papers %}
+            <tr>
+                <td><a href="/author/paper?id={{ paper.id }}" class="paper-link">{{ paper.title }}</a></td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+{% endblock %}

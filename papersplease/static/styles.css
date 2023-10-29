@@ -2,6 +2,7 @@
 #header {
     width: 100%;
     display: inline-flex;
+    background-color: #bbbbbb;
 }
 
 #nav-boxes {
@@ -12,10 +13,18 @@
     flex: 1;
 }
 
-#assign-box {
-    background-color: #F6E96F;
+.nav-box {
     text-decoration: none;
     color: #000000;
+}
+
+.nav-box:hover {
+    filter: brightness(85%);
+    transition-duration: 0.2s;
+}
+
+#assign-box {
+    background-color: #F6E96F;
     text-align: center;
     padding-top: 10px;
     padding-bottom: 10px;
@@ -23,8 +32,6 @@
 
 #conf-box {
     background-color: #60DA55;
-    text-decoration: none;
-    color: #000000;
     text-align: center;
     padding-top: 10px;
     padding-bottom: 10px;
@@ -32,8 +39,6 @@
 
 #paper-box {
     background-color: #F66F6F;
-    text-decoration: none;
-    color: #000000;
     text-align: center;
     padding-top: 10px;
     padding-bottom: 10px;
@@ -61,4 +66,33 @@
     padding-top: 20px;
     border: solid 1px;
     border-radius: 30px;
+}
+
+/* Paper page */
+#submit-btn-container {
+    height: 150px;
+    background-color: #e8e8e8;
+    display: flex;
+    justify-content: center;
+}
+
+#paper-sub-btn {
+    font-size: 125%;
+    align-self: center;
+    background-color: #55de24;
+    color: black;
+}
+
+#paper-table {
+    width: 100%;
+}
+
+.paper-link {
+    text-decoration: underline;
+    color: #000000;
+}
+
+.paper-link:hover {
+    color: rgba(0, 0, 0, 0.70);
+    transition-duration: 0.2s;
 }

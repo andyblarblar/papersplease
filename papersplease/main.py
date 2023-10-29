@@ -1,10 +1,10 @@
 from typing import Annotated
 
-from fastapi import FastAPI, Depends, HTTPException, Response, Request
+from fastapi import FastAPI, Depends, HTTPException, Response, Request, Query
 from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
-from sqlmodel import SQLModel, Session
+from sqlmodel import SQLModel, Session, select
 from starlette import status
 from starlette.responses import RedirectResponse
 
@@ -15,7 +15,7 @@ from .deps import (
     ensure_user_not_logged_in,
     get_user_roles,
 )
-from .orm.model import Account, AccountDTO
+from .orm.model import Account, AccountDTO, Paper, PaperAuthor
 from .orm.utils import Roles
 from .security import password
 from .security.token import Token, create_access_token
@@ -38,6 +38,40 @@ async def root(request: Request, roles: Annotated[Roles, Depends(get_user_roles)
     return templates.TemplateResponse(
         "home.html.jinja", {"request": request, "roles": roles}
     )
+
+
+@app.get("/author")
+async def root(
+    request: Request,
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+    sess: Annotated[Session, Depends(db_session)],
+):
+    """Main author page"""
+
+    # Get users papers
+    papers = sess.exec(
+        select(Paper)
+        .join(PaperAuthor, PaperAuthor.paper_id == Paper.id)
+        .where(PaperAuthor.author_email == account.email)
+    ).all()
+
+    return templates.TemplateResponse(
+        "author.html.jinja", {"request": request, "roles": roles, "papers": papers}
+    )
+
+
+@app.get("/author/paper")
+async def root(
+    request: Request,
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+    sess: Annotated[Session, Depends(db_session)],
+    paper_id: Annotated[int, Query()],
+):
+    """Author paper view"""
+    # TODO
+    pass
 
 
 @app.get("/login")
