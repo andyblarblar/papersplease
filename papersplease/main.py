@@ -27,6 +27,7 @@ from .orm.model import (
     Assignment,
     Conference,
     Decision,
+    Recommendation,
 )
 from .orm.utils import Roles
 from .security import password
@@ -187,6 +188,64 @@ async def paper_create(
     sess.commit()
 
     return paper_rec
+
+
+class ReccDTO(BaseModel):
+    recommendation: str
+    paper_id: int
+
+
+@app.post("/assignments", response_model=Assignment)
+async def recommendation_update(
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+    sess: Annotated[Session, Depends(db_session)],
+    dto: ReccDTO, # TODO get post working
+):
+    """Updates a reviewers recommendation"""
+
+    # Check if chair has already made decision
+    if sess.exec(select(Decision).where(Decision.paper_id == dto.paper_id)).first():
+        raise HTTPException(400, "Chair has already made decision!")
+
+    # Check if user owns assignment
+    if record := sess.exec(
+        select(Assignment).where(
+            Assignment.paper_id == dto.paper_id
+            and Assignment.reviewer_email == account.email
+        )
+    ).first():
+        # Update recommendation
+        record.recommendation = dto.recommendation
+        sess.add(record)
+        sess.commit()
+        sess.refresh(record)
+    else:
+        # Fail because assignment for this user does not exist
+        raise HTTPException(403, "You do not own this assignment!")
+
+    return record
+
+
+@app.get("/assignments")
+async def assignments_home(
+    request: Request,
+    sess: Annotated[Session, Depends(db_session)],
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+):
+    """Reviewer landing page"""
+
+    assignments = sess.exec(
+        select(Paper, PaperAuthor).where(
+            Paper.id == PaperAuthor.paper_id
+            and PaperAuthor.author_email == account.email
+        )
+    ).all()
+
+    return templates.TemplateResponse(
+        "reviewer.html.jinja",
+        {"request": request, "roles": roles, "assignments": assignments},
+    )
 
 
 @app.get("/login")

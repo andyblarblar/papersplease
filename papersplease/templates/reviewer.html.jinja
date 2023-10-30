@@ -1,0 +1,66 @@
+{% extends "common.html.jinja" %}
+
+{% block body %}
+    <p>
+        Select an assigned paper:
+    </p>
+
+    <!-- Paper table -->
+    <table class="pure-table pure-table-horizontal" id="paper-table">
+        <thead>
+        <tr>
+            <th>Paper name</th>
+            <th>Your recommendation</th>
+            <th>Submit</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for paper, assign in assignments %}
+            <tr>
+                <td>{{ paper.title }}</td>
+                <td>
+                    <select id="recc-{{ paper.id }}">
+                        <option {% if assign.recommendation == "pending" %}{{ "selected" }}{% endif %} value="pending">
+                            pending
+                        </option>
+                        <option {% if assign.recommendation == "accept" %}{{ "selected" }}{% endif %} value="accept">
+                            accept
+                        </option>
+                        <option {% if assign.recommendation == "neutral" %}{{ "selected" }}{% endif %} value="neutral">
+                            neutral
+                        </option>
+                        <option {% if assign.recommendation == "reject" %}{{ "selected" }}{% endif %} value="reject">
+                            reject
+                        </option>
+                    </select>
+                </td>
+                <td>
+                    <button onclick="(e => submit(e, 'recc-{{ paper.id }}', {{ paper.id }}))()">Submit</button>
+                </td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+
+    <script>
+        function submit(e, id, paper_id) {
+            const select = document.getElementById(id)
+            let choice = select.value
+
+            fetch("/assignments", {
+                "body": JSON.stringify({"paper_id": paper_id, "recommendation": choice}),
+                method: "post"
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        alert("Failed to update recommendation!")
+                        throw r.status
+                    }
+
+                    alert("Successfully updated recommendation")
+                })
+        }
+    </script>
+{% endblock %}
