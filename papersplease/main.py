@@ -156,8 +156,7 @@ async def paper_create(
 ):
     """Creates a new paper"""
 
-    authors = authors.split(",")
-    conf_id = conf_id
+    authors = authors.split(",")[:-1]
 
     # Validate authors
     for author in authors:
