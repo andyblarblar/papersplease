@@ -1,0 +1,23 @@
+{% extends "common.html.jinja" %}
+
+{% block body %}
+    <!-- Paper table -->
+    <table class="pure-table pure-table-horizontal" id="paper-table">
+        <thead>
+        <tr>
+            <th>Paper name</th>
+            <th>Current Decision</th>
+        </tr>
+        </thead>
+        <tbody>
+
+        {% for paper, decision in res %}
+            <tr>
+                <td><a href="/conferences/paper?paper_id={{ paper.id }}" class="paper-link">{{ paper.title }}</a></td>
+                <td>{{ decision.value if decision else "Pending" }}</td>
+            </tr>
+        {% endfor %}
+
+        </tbody>
+    </table>
+{% endblock %}

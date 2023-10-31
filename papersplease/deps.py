@@ -95,3 +95,13 @@ async def get_avil_conferences(
     ).all()
 
     return res
+
+
+async def get_owned_conferences(
+    sess: Annotated[Session, Depends(db_session)],
+    account: Annotated[AccountDTO, Depends(get_current_user)],
+) -> list[Conference]:
+    """Returns all conferences owned by the calling user"""
+    res = sess.exec(select(Conference).where(Conference.chair == account.email)).all()
+
+    return res

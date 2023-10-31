@@ -1,0 +1,90 @@
+{% extends "common.html.jinja" %}
+
+<!-- TODO style -->
+{% block body %}
+    <h1>
+        {{ paper.title }}
+    </h1>
+    <h4>
+        Authors: {{ authors }}
+    </h4>
+    <h3>
+        Submitted to: {{ conference.name }}
+    </h3>
+
+    <h3>
+        Assigned reviewers:
+        <ul>
+            {% for assign in assignments %}
+                <li>
+                    {{ assign.reviewer_email }}
+                </li>
+            {% endfor %}
+            {% for i in range(0, 3-assignment_count) %}
+                <li>
+                    Reviewer needed <input type="email" id="rev-{{ i }}" placeholder="Email here">
+                    <button onclick="submit_reviewer('rev-{{ i }}')">Submit</button>
+                </li>
+            {% endfor %}
+        </ul>
+    </h3>
+
+    <h3>
+        Paper decision: <select id="decision">
+        <option {% if decision == "pending" %}{{ "selected" }}{% endif %}
+                value="pending">
+            pending
+        </option>
+        <option {% if decision == "do not publish" %}{{ "selected" }}{% endif %}
+                value="do not publish">
+            do not publish
+        </option>
+        <option {% if decision == "publish" %}{{ "selected" }}{% endif %}
+                value="publish">
+            publish
+        </option>
+    </select>
+        <button onclick="submit_decision()">Submit</button>
+    </h3>
+
+    <script>
+        function submit_decision() {
+            const select = document.getElementById("decision")
+            let choice = select.value
+
+            fetch("/assignments", { //TODO create decision update endpoint
+                "body": JSON.stringify({"paper_id": paper_id, "recommendation": choice}),
+                method: "post",
+                headers: new Headers({"content-type": "application/json"})
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        alert("Failed to update recommendation!")
+                        throw r.status
+                    }
+
+                    alert("Successfully updated recommendation")
+                })
+        }
+
+        function submit_reviewer(id) {
+            const text = document.getElementById(id)
+            let email = text.value
+
+            fetch("/assignments", { //TODO create reviewer update endpoint
+                "body": JSON.stringify({"paper_id": paper_id, "recommendation": choice}),
+                method: "post",
+                headers: new Headers({"content-type": "application/json"})
+            })
+                .then(r => {
+                    if (!r.ok) {
+                        alert("Failed to update recommendation!")
+                        throw r.status
+                    }
+
+                    alert("Successfully updated recommendation")
+                })
+        }
+
+    </script>
+{% endblock %}

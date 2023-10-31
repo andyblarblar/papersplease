@@ -6,7 +6,7 @@ from fastapi.templating import Jinja2Templates
 from fastapi.security import OAuth2PasswordRequestForm
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
-from sqlmodel import SQLModel, Session, select
+from sqlmodel import Session, select
 from starlette import status
 from starlette.responses import RedirectResponse
 
@@ -18,6 +18,7 @@ from .deps import (
     get_user_roles,
     get_user_owned_paper,
     get_avil_conferences,
+    get_owned_conferences,
 )
 from .orm.model import (
     Account,
@@ -169,7 +170,7 @@ async def paper_create(
         raise HTTPException(400, "Conference submission deadline passed!")
     elif sess.exec(
         select(Account)
-        .join(Conference, Conference == conf_id)
+        .join(Conference, Conference.id == conf_id)
         .where(Account.email == Conference.chair)
     ).first():
         raise HTTPException(400, "Chairs cannot submit to their own conferences!")
@@ -245,6 +246,112 @@ async def assignments_home(
     return templates.TemplateResponse(
         "reviewer.html.jinja",
         {"request": request, "roles": roles, "assignments": assignments},
+    )
+
+
+@app.get("/conferences")
+async def chair_home(
+    request: Request,
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    confs: Annotated[list[Conference], Depends(get_owned_conferences)],
+):
+    """Chair landing page"""
+
+    return templates.TemplateResponse(
+        "chair.html.jinja",
+        {"request": request, "roles": roles, "conferences": confs},
+    )
+
+
+@app.get("/conferences/papers")
+async def chair_paperlist(
+    request: Request,
+    sess: Annotated[Session, Depends(db_session)],
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    conf_id: int,
+    confs: Annotated[list[Conference], Depends(get_owned_conferences)],
+):
+    """Chair conference level view"""
+
+    # Ensure user owns conference
+    if conf_id not in (i.id for i in confs):
+        raise HTTPException(403, "User does not own conference")
+
+    res = sess.exec(
+        select(Paper, Decision)
+        .where(Paper.conference_id == conf_id)
+        .outerjoin(Decision, Decision.paper_id == Paper.id)
+    ).all()
+
+    return templates.TemplateResponse(
+        "chair_paperlist.html.jinja",
+        {"request": request, "roles": roles, "res": res},
+    )
+
+
+@app.get("/conferences/paper")
+async def chair_paperview(
+    request: Request,
+    sess: Annotated[Session, Depends(db_session)],
+    roles: Annotated[Roles, Depends(get_user_roles)],
+    paper_id: int,
+    confs: Annotated[list[Conference], Depends(get_owned_conferences)],
+):
+    """Chair paper level view"""
+
+    (paper, decision) = sess.exec(
+        select(Paper, Decision)
+        .where(Paper.id == paper_id)
+        .outerjoin(Decision, Decision.paper_id == Paper.id)
+    ).first()
+
+    # Ensure paper in owned conference
+    if paper.conference_id not in (i.id for i in confs):
+        raise HTTPException(403, "User does not own conference")
+
+    assignments = sess.exec(
+        select(Assignment).where(Assignment.paper_id == paper_id)
+    ).all()
+
+    conf = sess.get(Conference, paper.conference_id)
+
+    authors = ",".join(
+        sess.exec(
+            select(PaperAuthor.author_email).where(PaperAuthor.paper_id == paper_id)
+        ).all()
+    )
+
+    # Determining recommended decision
+    decision_str = "so not publish"
+    # If decision is made, then use it
+    if decision:
+        decision_str = decision.value
+    else:
+        # If not all reviews are in, it's pending
+        if len(assignments) < 3:
+            decision_str = "pending"
+        # If all reviews are accept, accept
+        elif (
+            assignments[0].recommendation == Recommendation.accept
+            and assignments[1].recommendation == Recommendation.accept
+            and assignments[2].recommendation == Recommendation.accept
+        ):
+            decision_str = "publish"
+        else:
+            decision_str = "do not publish"
+
+    return templates.TemplateResponse(
+        "chair_paperview.html.jinja",
+        {
+            "request": request,
+            "roles": roles,
+            "paper": paper,
+            "decision": decision_str,
+            "assignments": assignments,
+            "assignment_count": len(assignments),
+            "conference": conf,
+            "authors": authors,
+        },
     )
 
 
