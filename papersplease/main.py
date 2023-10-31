@@ -199,7 +199,7 @@ class ReccDTO(BaseModel):
 async def recommendation_update(
     account: Annotated[AccountDTO, Depends(get_current_user)],
     sess: Annotated[Session, Depends(db_session)],
-    dto: ReccDTO, # TODO get post working
+    dto: ReccDTO,
 ):
     """Updates a reviewers recommendation"""
 
@@ -236,9 +236,9 @@ async def assignments_home(
     """Reviewer landing page"""
 
     assignments = sess.exec(
-        select(Paper, PaperAuthor).where(
-            Paper.id == PaperAuthor.paper_id
-            and PaperAuthor.author_email == account.email
+        select(Paper, Assignment).where(
+            Paper.id == Assignment.paper_id
+            and Assignment.reviewer_email == account.email
         )
     ).all()
 

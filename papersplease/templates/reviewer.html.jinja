@@ -21,16 +21,20 @@
                 <td>{{ paper.title }}</td>
                 <td>
                     <select id="recc-{{ paper.id }}">
-                        <option {% if assign.recommendation == "pending" %}{{ "selected" }}{% endif %} value="pending">
+                        <option {% if assign.recommendation.value == "pending" %}{{ "selected" }}{% endif %}
+                                value="pending">
                             pending
                         </option>
-                        <option {% if assign.recommendation == "accept" %}{{ "selected" }}{% endif %} value="accept">
+                        <option {% if assign.recommendation.value == "accept" %}{{ "selected" }}{% endif %}
+                                value="accept">
                             accept
                         </option>
-                        <option {% if assign.recommendation == "neutral" %}{{ "selected" }}{% endif %} value="neutral">
+                        <option {% if assign.recommendation.value == "neutral" %}{{ "selected" }}{% endif %}
+                                value="neutral">
                             neutral
                         </option>
-                        <option {% if assign.recommendation == "reject" %}{{ "selected" }}{% endif %} value="reject">
+                        <option {% if assign.recommendation.value == "reject" %}{{ "selected" }}{% endif %}
+                                value="reject">
                             reject
                         </option>
                     </select>
@@ -51,7 +55,8 @@
 
             fetch("/assignments", {
                 "body": JSON.stringify({"paper_id": paper_id, "recommendation": choice}),
-                method: "post"
+                method: "post",
+                headers: new Headers({"content-type": "application/json"})
             })
                 .then(r => {
                     if (!r.ok) {
