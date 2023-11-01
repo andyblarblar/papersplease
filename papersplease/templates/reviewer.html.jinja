@@ -55,7 +55,7 @@
 
             fetch("/assignments", {
                 "body": JSON.stringify({"paper_id": paper_id, "recommendation": choice}),
-                method: "post",
+                method: "put",
                 headers: new Headers({"content-type": "application/json"})
             })
                 .then(r => {

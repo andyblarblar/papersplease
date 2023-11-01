@@ -71,18 +71,18 @@
             const text = document.getElementById(id)
             let email = text.value
 
-            fetch("/assignments", { //TODO create reviewer update endpoint
-                "body": JSON.stringify({"paper_id": paper_id, "recommendation": choice}),
+            fetch("/assignments", {
+                "body": JSON.stringify({"paper_id": {{ paper.id }}, "email": email}),
                 method: "post",
                 headers: new Headers({"content-type": "application/json"})
             })
                 .then(r => {
                     if (!r.ok) {
-                        alert("Failed to update recommendation!")
+                        alert("Failed to update assignment!")
                         throw r.status
                     }
 
-                    alert("Successfully updated recommendation")
+                    alert("Successfully updated assignment")
                 })
         }
 

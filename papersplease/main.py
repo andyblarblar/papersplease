@@ -196,7 +196,7 @@ class ReccDTO(BaseModel):
     paper_id: int
 
 
-@app.post("/assignments", response_model=Assignment)
+@app.put("/assignments", response_model=Assignment)
 async def recommendation_update(
     account: Annotated[AccountDTO, Depends(get_current_user)],
     sess: Annotated[Session, Depends(db_session)],
@@ -210,10 +210,9 @@ async def recommendation_update(
 
     # Check if user owns assignment
     if record := sess.exec(
-        select(Assignment).where(
-            Assignment.paper_id == dto.paper_id
-            and Assignment.reviewer_email == account.email
-        )
+        select(Assignment)
+        .where(Assignment.paper_id == dto.paper_id)
+        .where(Assignment.reviewer_email == account.email)
     ).first():
         # Update recommendation
         record.recommendation = dto.recommendation
@@ -237,16 +236,70 @@ async def assignments_home(
     """Reviewer landing page"""
 
     assignments = sess.exec(
-        select(Paper, Assignment).where(
-            Paper.id == Assignment.paper_id
-            and Assignment.reviewer_email == account.email
-        )
+        select(Paper, Assignment)
+        .where(Paper.id == Assignment.paper_id)
+        .where(Assignment.reviewer_email == account.email)
     ).all()
 
     return templates.TemplateResponse(
         "reviewer.html.jinja",
         {"request": request, "roles": roles, "assignments": assignments},
     )
+
+
+class AssignCreate(BaseModel):
+    email: str
+    paper_id: int
+
+
+@app.post("/assignments", status_code=201, response_model=Assignment)
+async def assignments_create(
+    sess: Annotated[Session, Depends(db_session)],
+    confs: Annotated[list[Conference], Depends(get_owned_conferences)],
+    assign: AssignCreate,
+):
+    """Assigns a new author to a paper"""
+
+    paper = sess.get(Paper, assign.paper_id)
+
+    # Unsure reviewer does not own this paper
+    if sess.exec(
+        select(PaperAuthor)
+        .where(PaperAuthor.paper_id == paper.id)
+        .where(PaperAuthor.author_email == assign.email)
+    ).first():
+        raise HTTPException(400, "User cannot review own paper")
+
+    # Ensure user owns conference
+    if paper.conference_id not in (i.id for i in confs):
+        raise HTTPException(403, "User does not own conference")
+
+    # Ensure email exists
+    if not sess.get(Account, assign.email):
+        raise HTTPException(400, "Account does not exist")
+
+    # Ensure only 3 can be assigned
+    assignment_c = len(
+        sess.exec(
+            select(Assignment).where(assign.paper_id == Assignment.paper_id)
+        ).all()
+    )
+    if assignment_c == 3:
+        raise HTTPException(400, "All assignments are already assigned")
+
+    # Ensure reviewer can only be assigned once
+    if sess.exec(
+        select(Assignment)
+        .where(assign.paper_id == Assignment.paper_id)
+        .where(Assignment.reviewer_email == assign.email)
+    ).first():
+        raise HTTPException(400, "Reviewer already assigned to paper")
+
+    record = Assignment(reviewer_email=assign.email, paper_id=assign.paper_id)
+    sess.add(record)
+    sess.commit()
+
+    return record
 
 
 @app.get("/conferences")
@@ -328,7 +381,9 @@ async def chair_paperview(
         decision_str = decision.value
     else:
         # If not all reviews are in, it's pending
-        if len(assignments) < 3:
+        if len(assignments) < 3 or Recommendation.pending in (
+            dec.recommendation for dec in assignments
+        ):
             decision_str = "pending"
         # If all reviews are accept, accept
         elif (
