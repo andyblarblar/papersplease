@@ -14,7 +14,7 @@
         {% for paper, decision in res %}
             <tr>
                 <td><a href="/conferences/paper?paper_id={{ paper.id }}" class="paper-link">{{ paper.title }}</a></td>
-                <td>{{ decision.value if decision else "Pending" }}</td>
+                <td>{{ decision.status.value if decision else "Pending" }}</td>
             </tr>
         {% endfor %}
 

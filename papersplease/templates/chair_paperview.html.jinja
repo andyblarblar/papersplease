@@ -52,18 +52,18 @@
             const select = document.getElementById("decision")
             let choice = select.value
 
-            fetch("/assignments", { //TODO create decision update endpoint
-                "body": JSON.stringify({"paper_id": paper_id, "recommendation": choice}),
+            fetch("/decision", {
+                "body": JSON.stringify({"paper_id": {{ paper.id }}, "decision": choice}),
                 method: "post",
                 headers: new Headers({"content-type": "application/json"})
             })
                 .then(r => {
                     if (!r.ok) {
-                        alert("Failed to update recommendation!")
+                        alert("Failed to update decision!")
                         throw r.status
                     }
 
-                    alert("Successfully updated recommendation")
+                    alert("Successfully updated decision")
                 })
         }
 

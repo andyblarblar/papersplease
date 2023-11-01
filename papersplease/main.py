@@ -29,6 +29,7 @@ from .orm.model import (
     Conference,
     Decision,
     Recommendation,
+    DecisionStatus,
 )
 from .orm.utils import Roles
 from .security import password
@@ -378,7 +379,7 @@ async def chair_paperview(
     decision_str = "so not publish"
     # If decision is made, then use it
     if decision:
-        decision_str = decision.value
+        decision_str = decision.status.value
     else:
         # If not all reviews are in, it's pending
         if len(assignments) < 3 or Recommendation.pending in (
@@ -408,6 +409,45 @@ async def chair_paperview(
             "authors": authors,
         },
     )
+
+
+class DecisionDTO(BaseModel):
+    decision: DecisionStatus
+    paper_id: int
+
+
+@app.post("/decision", response_model=Decision)
+async def decision_update(
+    sess: Annotated[Session, Depends(db_session)],
+    decision: DecisionDTO,
+    confs: Annotated[list[Conference], Depends(get_owned_conferences)],
+):
+    """Creates or updates a decision"""
+
+    paper = sess.get(Paper, decision.paper_id)
+    conf = sess.get(Conference, paper.conference_id)
+
+    # Ensure paper in owned conference
+    if paper.conference_id not in (i.id for i in confs):
+        raise HTTPException(403, "User does not own conference")
+
+    # Ensure conference has not started
+    if datetime.datetime.utcnow().date() > conf.start_date:
+        raise HTTPException(400, "Cannot change decision after conference has started")
+
+    # Update or create record
+    if record := sess.exec(
+        select(Decision).where(Decision.paper_id == decision.paper_id)
+    ).first():
+        record.status = decision.decision
+        sess.add(record)
+        sess.commit()
+    else:
+        record = Decision(status=decision.decision, paper_id=decision.paper_id)
+        sess.add(record)
+        sess.commit()
+
+    return record
 
 
 @app.get("/login")
