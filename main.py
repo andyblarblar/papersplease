@@ -10,8 +10,8 @@ from sqlmodel import Session, select
 from starlette import status
 from starlette.responses import RedirectResponse
 
-from .orm.connect import prepare_db
-from .deps import (
+from papersplease.orm.connect import prepare_db
+from papersplease.deps import (
     db_session,
     get_current_user,
     ensure_user_not_logged_in,
@@ -20,7 +20,7 @@ from .deps import (
     get_avil_conferences,
     get_owned_conferences,
 )
-from .orm.model import (
+from papersplease.orm.model import (
     Account,
     AccountDTO,
     Paper,
@@ -31,9 +31,9 @@ from .orm.model import (
     Recommendation,
     DecisionStatus,
 )
-from .orm.utils import Roles
-from .security import password
-from .security.token import Token, create_access_token
+from papersplease.orm.utils import Roles
+from papersplease.security import password
+from papersplease.security.token import Token, create_access_token
 
 app = FastAPI()
 
