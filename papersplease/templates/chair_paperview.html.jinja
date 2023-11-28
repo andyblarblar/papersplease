@@ -59,7 +59,7 @@
             })
                 .then(r => {
                     if (!r.ok) {
-                        alert("Failed to update decision!")
+                        r.json().then(j => alert(`Failed to update decision: ${j["detail"]}`))
                         throw r.status
                     }
 
@@ -78,7 +78,7 @@
             })
                 .then(r => {
                     if (!r.ok) {
-                        alert("Failed to update assignment!")
+                        r.json().then(j => alert(`Failed to update assignment: ${j["detail"]}`))
                         throw r.status
                     }
 

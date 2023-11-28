@@ -37,7 +37,7 @@
             ).then(
                 r => {
                     if (!r.ok) {
-                        r.text().then(t => alert(`Creation failed: ${t}`))
+                        r.json().then(j => alert(`Creation failed: ${j["detail"]}`))
 
                         throw r.status
                     }

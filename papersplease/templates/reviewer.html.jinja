@@ -60,7 +60,7 @@
             })
                 .then(r => {
                     if (!r.ok) {
-                        alert("Failed to update recommendation!")
+                        r.json().then(j => alert(`Failed to update recommendation: ${j["detail"]}`))
                         throw r.status
                     }
 
